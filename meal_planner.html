@@ -1,0 +1,144 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meal Planner</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--ink:#1f2937;--mut:#6b7280;--navy:#23415b;--tile:#eaf1f8;--line:#e3e8ee;--gr:#e5f1e6;--am:#fce4d6;--acc:#e8a33d;--ok:#8fc39a;--lb:#9db7d1;--on:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111827;--card:#1b2433;--ink:#e5e7eb;--mut:#9aa4b2;--navy:#9db7d1;--tile:#243247;--line:#2c3a4f;--gr:#1f3a2a;--am:#4a2e22;--on:#111827;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111827;--card:#1b2433;--ink:#e5e7eb;--mut:#9aa4b2;--navy:#9db7d1;--tile:#243247;--line:#2c3a4f;--gr:#1f3a2a;--am:#4a2e22;--on:#111827;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--bg);color:var(--ink);font:14px/1.4 Arial,Helvetica,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:9;padding:10px 14px 0}
+h1{font-size:19px;margin:0 0 8px;color:var(--navy)}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+nav button{flex:1;padding:9px 2px;border:0;background:none;color:var(--mut);font:inherit;font-weight:700;border-bottom:3px solid transparent;cursor:pointer}
+nav button.on{color:var(--navy);border-color:var(--navy)}
+main{padding:12px 14px 40px;max-width:760px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+h2{font-size:14px;margin:0 0 8px;color:var(--navy)}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.tile{background:var(--tile);border-radius:10px;padding:10px;text-align:center}
+.tile small{display:block;font-size:10px;letter-spacing:.4px;color:var(--mut);font-weight:700}
+.tile b{display:block;font-size:26px;color:var(--navy)}.tile span{font-size:11px;color:var(--mut)}
+.week{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}.week th:first-child,.week td:first-child{width:14%}.week td{overflow-wrap:anywhere}.week th{background:var(--navy);color:var(--on);text-align:left;padding:5px}
+.week td{padding:5px;border-bottom:1px solid var(--line);vertical-align:top}.week td.f{background:var(--gr)}.week td.e{background:var(--am)}
+.bar{display:flex;align-items:center;gap:6px;margin:3px 0;font-size:12px}.bar>span:first-child{width:92px;flex:none}
+.trk{flex:1}.trk i{display:block;height:8px;border-radius:4px;margin:1px 0}.n{width:42px;text-align:right;color:var(--mut)}
+.seg{display:flex;height:10px;border-radius:5px;overflow:hidden;flex:1;background:var(--line)}
+label.f{display:block;font-size:11px;color:var(--mut);margin:8px 0 2px}
+input[type=text],select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}
+button.b{padding:8px 12px;border:0;border-radius:8px;background:var(--navy);color:var(--on);font:inherit;font-weight:700;cursor:pointer}
+button.g{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--ink);font:inherit;cursor:pointer}
+button.d{color:#c0392b;border-color:#c0392b}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}.mut{color:var(--mut);font-size:12px}
+.chip{font-size:10px;background:var(--tile);color:var(--navy);padding:1px 6px;border-radius:9px;margin-left:4px}
+.it{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.it.h span{text-decoration:line-through;color:var(--mut)}
+.it input{width:20px;height:20px;flex:none}.hv{font-size:10px;color:var(--mut);display:flex;align-items:center;gap:4px;flex:none}.qty{font-weight:700;color:var(--navy);flex:none;max-width:40%}.fz{font-size:12px;display:flex;align-items:center;gap:6px;flex:none}.fz input,.hv input{margin:0}a.lk{color:var(--navy);font-weight:700;font-size:12px}.nt{white-space:pre-wrap;font-size:12px;border-top:1px solid var(--line);margin:8px 0;padding-top:8px}textarea{resize:vertical}.msg{background:var(--am);padding:8px;border-radius:8px;margin-bottom:10px;font-size:12px}
+</style></head><body>
+<header><h1>Meal Planner</h1><nav id="nav"></nav></header><main id="app"></main>
+<script>
+const DAYS=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const SL=[["b","Breakfast","Breakfast"],["l","Lunch","Lunch/Dinner"],["d","Dinner","Lunch/Dinner"],["s","Snacks","Snacks"]];
+const CATS=[["p","Protein","protein"],["c","Carbs","carbs"],["v","Vegetables","veg"],["f","Fruits","fruit"],["d","Dairy","dairy"],["o","Pantry / Other","pantry"]];
+const OUT=["Takeout","Eating Out"],TYPES=["Breakfast","Lunch/Dinner","Snacks"],TABS=[["dash","Dashboard"],["plan","Plan"],["rec","Recipes"],["shop","Shopping"]];
+let S={recipes:[],plan:{},shop:{have:[],manual:[],done:[]}},tab="dash",ref={},got={},offline=false,msg="",conf=null,q="",fP="",fT="",fF=false,hideHave=false,edit=null,draft=null;
+function h(t,a,...k){const e=document.createElement(t);let v;for(const x in a||{}){const y=a[x];if(x=="value")v=y;else if(x=="class")e.className=y;else if(x.startsWith("on"))e.addEventListener(x.slice(2),y);else if(x=="checked")e.checked=!!y;else if(y!==false&&y!=null)e.setAttribute(x,y)}
+for(const c of k.flat(9))if(c!=null&&c!==false)e.append(c.nodeType?c:document.createTextNode(String(c)));if(v!==undefined)e.value=v;return e}
+const rec=n=>S.recipes.find(r=>r.name===n),toks=s=>[...new Set((s||"").split(",").map(x=>x.trim().toLowerCase()).filter(Boolean))],ing=(r,f)=>Array.isArray(r[f])?r[f]:(r[f]||"").split(",").map(x=>({n:x.trim(),q:""})).filter(x=>x.n),nm=(r,f)=>[...new Set(ing(r,f).map(x=>x.n.trim().toLowerCase()).filter(Boolean))];
+const planned=()=>Object.entries(S.plan).filter(([k,v])=>v&&rec(v));
+const FR={"½":.5,"¼":.25,"¾":.75,"⅓":1/3,"⅔":2/3,"⅛":.125};
+function pq(s0){let s=(s0||"").trim(),v=0,ok=false,m;if(!s)return null;
+if(m=s.match(/^([0-9]+)[ ]+([0-9]+)[/]([0-9]+)/)){v=+m[1]+m[2]/m[3];ok=true;s=s.slice(m[0].length)}
+else if(m=s.match(/^([0-9]+)[/]([0-9]+)/)){v=m[1]/m[2];ok=true;s=s.slice(m[0].length)}
+else if(m=s.match(/^[0-9]*[.]?[0-9]+/)){v=+m[0];ok=true;s=s.slice(m[0].length)}
+if(m=s.match(/^[ ]*([½¼¾⅓⅔⅛])/)){v+=FR[m[1]];ok=true;s=s.slice(m[0].length)}
+const u=s.trim().replace(/[.]$/,"");
+if(!ok||(u&&!/^[A-Za-z]/.test(u)))return{t:s0.trim()};return{v,u}}
+function sumq(L){const N={},T=[];
+for(const q of L){const p=pq(q);if(!p)continue;if(p.t!==undefined){if(p.t&&!T.includes(p.t))T.push(p.t);continue}
+let k=p.u.toLowerCase();if(k.length>2&&k.endsWith("s"))k=k.slice(0,-1);
+const e=N[k]||(N[k]={v:0,s:null,p:null,f:p.u});e.v+=p.v;if(p.u.length>2&&/s$/i.test(p.u))e.p=e.p||p.u;else e.s=e.s||p.u}
+const o=Object.values(N).map(e=>{const t=Math.round(e.v*100)/100,u=t===1?(e.s||e.f):(e.p||e.f);return t+(u?" "+u:"")});
+return o.concat(T).join(" + ")}
+function items(){const o={},A={};for(const[c,,f]of CATS){const s=new Set();planned().forEach(([,n])=>ing(rec(n),f).forEach(x=>{const i=String(x.n||"").trim().toLowerCase();if(!i)return;s.add(i);(A[c+"|"+i]=A[c+"|"+i]||[]).push(x.q)}));o[c]=[...s].sort()}o.q={};for(const k in A)o.q[k]=sumq(A[k]);return o}
+const need=(c,i)=>!S.shop.have.includes(c+"|"+i);
+function save(k){const m={recipes:{list:S.recipes},plan:{m:S.plan},shop:S.shop}[k];if(!ref[k]){msg="Storage unavailable: changes won't be kept after you close this page.";return}
+ref[k].set(m).catch(e=>{msg="Couldn't save ("+(e&&(e.message||e.code)||"error")+").";render()})}
+function sub(k,fn){ref[k].onSnapshot(s=>{fn(JSON.parse(JSON.stringify(s.exists?s.data():{})));got[k]=1;render()},()=>{msg="Storage error.";render()})}
+(async()=>{try{const[db,u]=await Promise.all([claude.use("db"),claude.use("user")]);if(!db||!u)throw 0;const id=await u.id();
+for(const k of["recipes","plan","shop"])ref[k]=db.doc("data/users/"+id+"/"+k);
+sub("recipes",d=>S.recipes=d.list||[]);sub("plan",d=>S.plan=d.m||{});sub("shop",d=>S.shop={have:d.have||[],manual:d.manual||[],done:d.done||[]})}catch(e){offline=true;msg="Storage unavailable: changes won't be kept after you close this page."}render()})();
+
+function tile(l,v,s){return h("div",{class:"tile"},h("small",0,l),h("b",0,v),h("span",0,s))}
+function dash(){const it=items(),dn=DAYS.filter(d=>S.plan[d+"|d"]),open=DAYS.filter(d=>!S.plan[d+"|d"]);
+let tot=S.shop.manual.length,buy=S.shop.manual.filter(m=>m.need).length;for(const[c]of CATS)it[c].forEach(i=>{tot++;if(need(c,i))buy++});
+const R=S.recipes,fz=R.filter(r=>r.freezer).length,pl=planned();
+const a=h("div"),tiles=h("div",{class:"tiles"},tile("DINNERS PLANNED",dn.length,"of 7 nights"),tile("MEALS PLANNED",Object.values(S.plan).filter(Boolean).length,"this week"),
+tile("OPEN DINNER NIGHTS",open.length,open.length?open.map(d=>d.slice(0,3)).join(", "):"All covered"),tile("ITEMS TO BUY",buy,"of "+tot+" on your list"),
+tile("RECIPES",R.length,R.filter(r=>r.type=="Breakfast").length+" breakfast, "+R.filter(r=>r.type=="Lunch/Dinner").length+" lunch/dinner"),tile("FREEZER-FRIENDLY",fz,R.length?Math.round(fz/R.length*100)+"% of library":""));
+const t=h("table",{class:"week"},h("tr",0,["Day","Breakfast","Lunch","Dinner","Snacks"].map(x=>h("th",0,x))),
+DAYS.map(d=>h("tr",0,h("td",0,h("b",0,d.slice(0,3))),SL.map(([k])=>{const v=S.plan[d+"|"+k];return h("td",{class:v?"f":k=="d"?"e":""},v||"")}))));
+a.append(h("div",{class:"card"},h("h2",0,"This week's meals at a glance"),t,h("div",{class:"mut",style:"margin-top:6px"},"Green = planned. Amber = no dinner yet.")));a.append(tiles);
+const all=[...new Set(R.flatMap(r=>nm(r,"protein")))];const rows=all.map(p=>[p,R.filter(r=>nm(r,"protein").includes(p)).length,pl.filter(([,n])=>nm(rec(n),"protein").includes(p)).length]).sort((x,y)=>y[1]-x[1]);
+const nl=R.filter(r=>!nm(r,"protein").length).length,np=pl.filter(([,n])=>!nm(rec(n),"protein").length).length;if(nl)rows.push(["no protein listed",nl,np]);
+const mx=Math.max(1,...rows.map(r=>r[1]),...rows.map(r=>r[2]));
+a.append(h("div",{class:"card"},h("h2",0,"Protein mix: library vs. this week"),rows.map(([p,l,w])=>h("div",{class:"bar"},h("span",0,p),
+h("div",{class:"trk"},h("i",{style:`width:${l/mx*100}%;background:var(--lb)`}),h("i",{style:`width:${w/mx*100}%;background:var(--navy)`})),h("span",{class:"n"},l+" / "+w))),
+h("div",{class:"mut"},"Light = recipes in library · dark = meals planned this week")));
+const sc=h("div",{class:"card"},h("h2",0,"Shopping progress"));
+for(const[c,n]of CATS){const b=it[c].filter(i=>need(c,i)).length,tt=it[c].length;sc.append(h("div",{class:"bar"},h("span",0,n),h("div",{class:"seg"},h("i",{style:`width:${tt?b/tt*100:0}%;background:var(--acc)`}),h("i",{style:`width:${tt?(tt-b)/tt*100:0}%;background:var(--ok)`})),h("span",{class:"n"},b+" / "+tt)))}
+sc.append(h("div",{class:"mut"},"Orange = still to buy · green = already have"));a.append(sc);return a}
+
+function plan(){const a=h("div");
+for(const d of DAYS){const c=h("div",{class:"card"},h("h2",0,d));
+for(const[k,n,ty]of SL){const key=d+"|"+k,cur=S.plan[key]||"",opts=[...(k=="s"?[]:OUT),...S.recipes.filter(r=>r.type==ty).map(r=>r.name).sort()];if(cur&&!opts.includes(cur))opts.push(cur);
+c.append(h("div",{class:"row",style:"margin:5px 0"},h("span",{class:"mut",style:"width:70px"},n),h("select",{value:cur,onchange:e=>{if(e.target.value)S.plan[key]=e.target.value;else delete S.plan[key];save("plan");render()}},h("option",{value:""},"—"),opts.map(o=>h("option",{value:o},o)))))}
+a.append(c)}
+a.append(h("button",{class:"g d",onclick:()=>{if(conf!="clr"){conf="clr";render();return}S.plan={};conf=null;save("plan");render()}},conf=="clr"?"Tap again to clear the week":"Clear the week"));return a}
+
+const blank=r=>{for(const[,,f]of CATS)r[f]=ing(r,f).map(x=>({...x}));return r};
+function form(){const e=edit,D=draft;const f=(l,k)=>[h("label",{class:"f"},l),h("input",{type:"text",value:D[k]||"",oninput:x=>D[k]=x.target.value})];
+const ings=(n,k)=>{if(!D[k].length)D[k].push({n:"",q:""});return h("div",0,h("label",{class:"f"},n),D[k].map((v,j)=>h("div",{class:"row",style:"margin:3px 0"},h("input",{type:"text",placeholder:"Qty",style:"flex:1;min-width:0",value:v.q,oninput:x=>v.q=x.target.value}),h("input",{type:"text","data-f":k,placeholder:"Ingredient",style:"flex:3;min-width:0",value:v.n,oninput:x=>v.n=x.target.value}),h("button",{class:"g",onclick:()=>{D[k].splice(j,1);render()}},"✕"))),h("button",{class:"g",onclick:()=>{D[k].push({n:"",q:""});render();const l=document.querySelectorAll('input[data-f="'+k+'"]');l[l.length-1].focus()}},"+ Add ingredient"))};
+return h("div",{class:"card"},h("div",{class:"row"},h("h2",0,e==null?"Add a recipe":"Edit recipe"),h("label",{class:"fz"},h("input",{type:"checkbox",checked:D.freezer,onchange:x=>D.freezer=x.target.checked}),"Freezer friendly")),f("Name","name"),h("label",{class:"f"},"Type"),
+h("select",{value:D.type,onchange:x=>D.type=x.target.value},TYPES.map(t=>h("option",{value:t},t))),
+CATS.map(([,n,k])=>ings(n,k)),
+h("label",{class:"f"},"Recipe link"),h("input",{type:"text",placeholder:"Paste a recipe URL (https://...)",value:D.url||"",oninput:x=>D.url=x.target.value}),h("label",{class:"f"},"Directions / notes"),h("textarea",{rows:"5",placeholder:"Directions, tips, or any notes about this recipe",value:D.notes||"",oninput:x=>D.notes=x.target.value}),
+
+h("div",{class:"row",style:"margin-top:10px;justify-content:flex-start"},h("button",{class:"b",onclick:()=>{const n=(D.name||"").trim();if(!n){msg="Give the recipe a name.";render();return}
+if(S.recipes.some((r,i)=>r.name.toLowerCase()==n.toLowerCase()&&i!==e)){msg="A recipe with that name already exists.";render();return}
+let u=(D.url||"").trim();if(u&&!/^https?:[/][/]/i.test(u))u="https://"+u;if(u){try{if(!/^https?:$/.test(new URL(u).protocol))throw 0}catch(_){msg="That recipe link doesn't look like a valid web address.";render();return}}
+const r={...D,name:n,freezer:!!D.freezer,url:u,notes:(D.notes||"").trim()};for(const[,,f]of CATS)r[f]=D[f].map(x=>({n:x.n.trim(),q:(x.q||"").trim()})).filter(x=>x.n);if(e==null)S.recipes.push(r);else{const o=S.recipes[e].name;S.recipes[e]=r;if(o!==n){for(const k in S.plan)if(S.plan[k]===o)S.plan[k]=n;save("plan")}}
+save("recipes");edit=null;draft=null;msg="";render()}},"Save"),h("button",{class:"g",onclick:()=>{edit=null;draft=null;msg="";render()}},"Cancel")))}
+function recipes(){const a=h("div");if(draft){a.append(form());return a}
+a.append(h("div",{class:"row",style:"margin-bottom:10px"},h("input",{type:"text",placeholder:"Search recipes",value:q,oninput:e=>{q=e.target.value;render(e.target.selectionStart)}}),
+h("button",{class:"b",onclick:()=>{edit=null;draft=blank({type:"Lunch/Dinner"});render()}},"+ Add")));
+const prots=[...new Set(S.recipes.flatMap(r=>nm(r,"protein")))].sort();if(fP&&!prots.includes(fP))fP="";
+a.append(h("div",{class:"row",style:"margin-bottom:10px;flex-wrap:wrap"},h("select",{value:fP,style:"flex:1;min-width:110px",onchange:e=>{fP=e.target.value;render()}},h("option",{value:""},"All proteins"),prots.map(p=>h("option",{value:p},p.charAt(0).toUpperCase()+p.slice(1)))),h("select",{value:fT,style:"flex:1;min-width:110px",onchange:e=>{fT=e.target.value;render()}},h("option",{value:""},"All types"),TYPES.map(t=>h("option",{value:t},t))),h("label",{class:"fz"},h("input",{type:"checkbox",checked:fF,onchange:e=>{fF=e.target.checked;render()}}),"Freezer friendly")));
+S.recipes.map((r,i)=>[r,i]).filter(([r])=>(!q||(r.name+" "+nm(r,"protein").join(" ")).toLowerCase().includes(q.toLowerCase()))&&(!fP||nm(r,"protein").includes(fP))&&(!fT||r.type==fT)&&(!fF||r.freezer)).sort((x,y)=>x[0].name.localeCompare(y[0].name)).forEach(([r,i])=>{
+const det=CATS.map(([,n,f])=>{const l=ing(r,f);return l.length?n+": "+l.map(x=>(x.q?x.q+" ":"")+x.n).join(", "):""}).filter(Boolean).join(" · ");
+a.append(h("div",{class:"card rc"},h("div",{class:"row"},h("b",0,r.name,h("span",{class:"chip"},r.type),r.freezer?h("span",{class:"chip"},"freezer"):null)),
+h("div",{class:"mut",style:"margin:4px 0 8px"},det||"No ingredients listed"),r.url&&/^https?:[/][/]/i.test(r.url)?h("div",{style:"margin:0 0 8px"},h("a",{class:"lk",href:r.url,target:"_blank",rel:"noopener noreferrer"},"View recipe link")):null,r.notes?h("div",{class:"nt"},r.notes):null,
+h("div",{class:"row",style:"justify-content:flex-start"},h("button",{class:"g",onclick:()=>{edit=i;draft=blank({...r});render()}},"Edit"),
+h("button",{class:"g d",onclick:()=>{if(conf!="r"+i){conf="r"+i;render();return}for(const k in S.plan)if(S.plan[k]===r.name)delete S.plan[k];S.recipes.splice(i,1);conf=null;save("recipes");save("plan");render()}},conf=="r"+i?"Tap again to delete":"Delete"))))});
+if(!S.recipes.length&&got.recipes)a.append(h("div",{class:"mut"},"No recipes yet. Tap + Add to create one."));else if(S.recipes.length&&!a.querySelector(".rc"))a.append(h("div",{class:"mut"},"No recipes match these filters."));return a}
+
+function shop(){const it=items(),a=h("div");let any=false;
+a.append(h("div",{class:"row",style:"margin-bottom:10px"},h("label",0,h("input",{type:"checkbox",checked:hideHave,onchange:e=>{hideHave=e.target.checked;render()}})," Hide items I already have"),
+h("span",{class:"mut"},"Left box = picked up, right box = already have")));
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1),dn=k=>S.shop.done.includes(k),tg=(L,k)=>{const x=L.indexOf(k);x<0?L.push(k):L.splice(x,1);save("shop");render()};
+const row=(q,txt,done,have,fd,fh,del)=>h("div",{class:"it"},h("input",{type:"checkbox",title:"Picked up","aria-label":"Picked up "+txt,checked:done,onchange:fd}),q?h("span",{class:"qty"},q):null,h("span",{style:"flex:1"},txt),h("label",{class:"hv"},"Already have",h("input",{type:"checkbox","aria-label":"Already have "+txt,checked:have,onchange:fh})),del||null);
+for(const[c,n]of CATS){const l=it[c].filter(i=>!hideHave||need(c,i));if(!it[c].length)continue;any=true;
+a.append(h("div",{class:"card"},h("h2",0,n),l.map(i=>{const k=c+"|"+i;return row(it.q[k],cap(i),dn(k),!need(c,i),()=>tg(S.shop.done,k),()=>tg(S.shop.have,k))})))}
+if(!any)a.append(h("div",{class:"card mut"},"Nothing here yet. Pick meals on the Plan tab and their ingredients show up automatically."));
+const m=h("div",{class:"card"},h("h2",0,"Other (manual)"));
+S.shop.manual.forEach((x,i)=>{if(hideHave&&!x.need)return;m.append(row(x.q,x.n,!!x.done,!x.need,()=>{x.done=!x.done;save("shop");render()},()=>{x.need=!x.need;save("shop");render()},h("button",{class:"g",onclick:()=>{S.shop.manual.splice(i,1);save("shop");render()}},"✕")))});
+const qi=h("input",{type:"text",placeholder:"Qty",style:"flex:1;min-width:0"}),inp=h("input",{type:"text",style:"flex:3;min-width:0",placeholder:"Add an item (e.g. olive oil)",onkeydown:e=>{if(e.key=="Enter")add()}});
+const add=()=>{const v=inp.value.trim();if(v){S.shop.manual.push({n:v,q:qi.value.trim(),need:true,done:false});save("shop");render()}};
+m.append(h("div",{class:"row",style:"margin-top:8px"},qi,inp,h("button",{class:"b",onclick:add},"Add")));a.append(m);return a}
+
+function render(caret){const app=document.getElementById("app"),y=scrollY;
+document.getElementById("nav").replaceChildren(...TABS.map(([k,n])=>h("button",{class:tab==k?"on":"",onclick:()=>{tab=k;conf=null;msg=offline?msg:"";render();scrollTo(0,0)}},n)));
+const ld=!offline&&!(got.recipes&&got.plan&&got.shop);
+app.replaceChildren(...[msg?h("div",{class:"msg"},msg):null,ld?h("div",{class:"mut"},"Loading your planner…"):{dash,plan,rec:recipes,shop}[tab]()].filter(Boolean));
+const s=app.querySelector("input[type=text][placeholder='Search recipes']");if(s&&caret!=null){s.focus();s.setSelectionRange(caret,caret)}scrollTo(0,y)}
+render();
+</script></body></html>
